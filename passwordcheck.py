@@ -1,49 +1,71 @@
 import re
 
-def assess_password_strength(password):
-    # Criteria to check for password strength
+def check_password_strength(password):
+    # Initialize a score variable
+    score = 0
+    
+    # Length check
     length = len(password)
-    has_uppercase = bool(re.search(r"[A-Z]", password))
-    has_lowercase = bool(re.search(r"[a-z]", password))
-    has_digit = bool(re.search(r"\d", password))
-    has_special = bool(re.search(r"[!@#$%^&*()-_+=]", password))
-    
-    # Strength calculation
-    strength = 0
     if length >= 8:
-        strength += 1
-    if has_uppercase:
-        strength += 1
-    if has_lowercase:
-        strength += 0
-    if has_digit:
-        strength += 1
-    if has_special:
-        strength += 1
-    
-    return strength
-    print("Strength of password = ",strength)
-def main():
-    while True:
-        password = input("Enter your password: ")
-        strength = assess_password_strength(password)
-        
-        if strength == 0:
-            print("Password is very weak.")
-        elif strength == 1:
-            print("Password is weak.")
-        elif strength == 2:
-            print("Password is moderate.")
-        elif strength == 3:
-            print("Password is strong.")
-        elif strength == 4:
-            print("Password is very strong.")
-        else:
-            print("Invalid password.")
-        
-        another = input("Do you want to check another password? (yes/no): ").lower()
-        if another != 'yes':
-            break
+        score += 1
+    if length >= 12:
+        score += 1
 
-if __name__ == "__main__":
-    main()
+    # Pattern checks
+    patterns = [
+        r'[a-z]',         # Lowercase letter
+        r'[A-Z]',         # Uppercase letter
+        r'[0-9]',         # Digit
+        r'[!@#$%^&*(),.?":{}|<>]',  # Special character
+    ]
+
+    # Check for the presence of each pattern and add to the score
+    for pattern in patterns:
+        if re.search(pattern, password):
+            score += 1
+
+    # Check for sequences of the same character
+    if re.search(r'(.)\1{2,}', password):
+        score -= 1  # Penalty for repeated sequences
+    
+    # Check for common patterns
+    common_patterns = [
+        '123456', 'password', 'qwerty', 'abc123', 'letmein', 'welcome', 'iloveyou', 'admin', 'user'
+    ]
+    for common_pattern in common_patterns:
+        if common_pattern in password.lower():
+            score -= 1  # Penalty for common patterns
+
+    # Score interpretation
+    if score <= 2:
+        strength = "Very Weak"
+    elif score == 3:
+        strength = "Weak"
+    elif score == 4:
+        strength = "Moderate"
+    elif score == 5:
+        strength = "Strong"
+    elif score >= 6:
+        strength = "Very Strong"
+
+    return {
+        "score": score,
+        "strength": strength
+    }
+
+# Example usage
+passwords = [
+    "password",
+    "12345678",
+    "Passw0rd!",
+    "Str0ngP@ssw0rd!",
+    "abcABC123!@#",
+    "aaaAAA111!!!",
+    "A1b2C3d4E5F6G7",
+    "P@$$w0rd",
+    "letmein123"
+]
+
+for pwd in passwords:
+    result = check_password_strength(pwd)
+    print(f"Password: {pwd}, Strength: {result['strength']}, Score: {result['score']}")
